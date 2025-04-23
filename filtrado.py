@@ -62,7 +62,7 @@ def parse_wos_entries(file_path):
     return entries
 
 
-def buscar_entradas(entries, modo='AND', **criterios):
+def buscar_entradas(entries, modo='OR', **criterios):
     """
     Busca entradas en la lista de diccionarios según los criterios dados.
 
@@ -161,7 +161,7 @@ def parse_sco_entries(file_path):
         return("Fuente no soportada")
     
 
-def buscar_en_csv(df, modo='AND', **criterios):
+def buscar_en_csv(df, modo='OR', **criterios):
     """
     Busca filas que cumplan los criterios dados, combinados por AND o OR.
 
@@ -235,10 +235,26 @@ def a_excel_fuente(resultados, filtro, fecha):
     wb.save(archivo)
     
 
-def procesar_wos(file_path, filtro, modo = 'AND'): 
+def procesar_wos(file_path, filtro, modo = 'OR'): 
     fecha = datetime.now().strftime("%d%m%y%H%M")
-    listado = parse_wos_entries(file_path)    
-    if modo == 'AND':
+    listado = parse_wos_entries(file_path)   
+    
+    datos = {}
+    if 'A' in filtro:
+        datos['DE'] = filtro.get('A')
+    if 'B' in filtro:
+        datos['ID'] = filtro.get('B')
+    if 'C' in filtro:
+        datos['AB'] = filtro.get('C')
+    
+    filtro = next(iter(filtro.values()))
+    resultados = buscar_entradas(listado, modo='OR', **datos)        
+    resultados = exportar_a_excel(resultados, filtro, f"resultados_{filtro}_{fecha}.xlsx")
+    if isinstance(resultados, str):
+        return(resultados)
+    
+    """
+    if modo == 'OR':
         resultados = buscar_entradas(listado, modo='OR', DE = filtro, ID = filtro)        
         resultados = exportar_a_excel(resultados, filtro, f"resultados_{filtro}_{fecha}.xlsx")
         if isinstance(resultados, str):
@@ -261,15 +277,32 @@ def procesar_wos(file_path, filtro, modo = 'AND'):
         resultados = exportar_a_excel(resultados, filtro, f"resultados_{filtro}_{fecha}.xlsx")
         if isinstance(resultados, str):
             return(resultados)
-    
+    """
     return (f"resultados_{filtro}_{fecha}.xlsx")
 
-def procesar_sco(file_path, filtro, modo='AND'):  
+def procesar_sco(file_path, filtro, modo='OR'):  
     fecha = datetime.now().strftime("%d%m%y%H%M")
     file_tmp, header = parse_sco_entries(file_path)          
+    
+    datos = {}
+    if 'A' in filtro:
+        datos['Author_Keywords'] = filtro.get('A')
+    if 'B' in filtro:
+        datos['Index_Keywords'] = filtro.get('B')
+    if 'C' in filtro:
+        datos['Abstract'] = filtro.get('C')
 
-    if modo == 'AND':
-        resultados = buscar_en_csv(file_tmp, modo='OR', Author_Keywords="industry", Index_Keywords='industry')
+    
+    resultados = buscar_en_csv(file_tmp, modo='OR', **datos)
+    if isinstance(resultados, str):
+        return(resultados)
+    
+    """
+    if modo == 'OR':
+        resultados = buscar_en_csv(file_tmp, modo ='OR', 
+                                   Author_Keywords = filtro, 
+                                   Index_Keywords = filtro,
+                                   Abstract = filtro)
         if isinstance(resultados, str):
             return(resultados)
     
@@ -286,7 +319,8 @@ def procesar_sco(file_path, filtro, modo='AND'):
         resultados = buscar_en_csv(file_tmp, modo='OR', Abstract=filtro)
         if isinstance(resultados, str):
             return(resultados)
-    
+    """
+    filtro = next(iter(filtro.values()))
     a_excel_fuente(resultados, filtro, fecha)
     return (f"resultados_{filtro}_{fecha}.xlsx")
     

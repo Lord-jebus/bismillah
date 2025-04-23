@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 """
 Created on Sat Apr 12 23:22:16 2025
+V 1.2 22-4-2025
 
 @author: Jebus
 """
@@ -175,27 +176,15 @@ class Aplicacion(ttk.Frame):
             self.etiqueta_advertencia.config(
                 text="Seleccione un criterio de filtro", foreground="#660033")
             return
-
-        if v3 and (v1 or v2):
-            self.etiqueta_advertencia.config(
-                text="No puede combinar el tercer criterio con los otros dos", foreground="#660033")
-            return
-
-        # Determinación del modo válido
-        if v1 and v2:
-            modo = 'OR'
-        elif v1:
-            modo = '1'
-        elif v2:
-            modo = '2'
-        elif v3:
-            modo = '3'
-        else:
-            # Fallback por seguridad, aunque no debería llegar aquí
-            self.etiqueta_advertencia.config(
-                text="Selección inválida de filtros", foreground="#660033")
-            return
-
+       
+        datos = {}
+        if self.val.get() == 1:
+            datos['A'] = self.entry_var.get()
+        if self.val2.get() == 1:
+            datos['B'] = self.entry_var.get()
+        if self.val3.get() == 1:
+            datos['C'] = self.entry_var.get()
+        
         # Selección de función de procesamiento
         procesar_func = {
             "WOS": filtrado.procesar_wos,
@@ -203,7 +192,7 @@ class Aplicacion(ttk.Frame):
         }.get(file_source)
 
         if procesar_func:
-            fecha = procesar_func(filename, filtro, modo=modo)
+            fecha = procesar_func(filename, datos, modo = 'OR')
             print(fecha)
             self.etiqueta_ruta.config(
                 text=recurso_relativo("images")[:-7], foreground="#660033")
@@ -214,66 +203,6 @@ class Aplicacion(ttk.Frame):
 
         # Actualiza la etiqueta de ruta después del procesamiento
         self.etiqueta_ruta.config(text=get_base_path(), foreground="#660033")
-      
-        
-              
-    def procesar1(self):
-        global file_source
-        print(file_source)
-        if self.val.get() == False and self.val2.get() == False:            
-            self.etiqueta_advertencia.config(text="Seleccione un criterio de filtro", foreground="#660033")            
-        else:
-            if self.val.get() and self.val2.get():
-                if file_source == "WOS":
-                    filtrado.procesar_wos(filename, filtro, modo = 'AND')
-                if  file_source == "SCO":
-                    filtrado.procesar_sco(filename, filtro, modo = 'AND')
-                else:
-                    self.etiqueta_advertencia.config(text="Archivo inválido", foreground="#660033")
-            else:
-                if file_source == "WOS":
-                    filtrado.procesar_wos(filename, filtro, modo = 'OR')
-                if  file_source == "SCO":
-                    filtrado.procesar_sco(filename, filtro, modo = 'OR')
-                else:
-                    self.etiqueta_advertencia.config(text="Archivo inválido", foreground="#660033")
-                
-class SCOPUS1(ttk.Frame):    
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.config(width=800, height=450)
-
-        self.label = ttk.Label(
-            self, font=("Tahoma", 12),
-            text="Si exporta un archivo de CSV desde SCOPUS\nseleccione las opciones 'Author keywords' e 'Indexed keywords'", foreground="#0070C0")
-        self.label.pack()
-
-        self.sc1 = tk.PhotoImage(file=recurso_relativo("images/SCOPUS1.png"))
-        self.etiqueta3 = tk.Label(self, image=self.sc1)
-        self.etiqueta3.pack()#place(x=1, y=1)
-        
-        self.sc2 = tk.PhotoImage(file=recurso_relativo("images/SCOPUS2.png"))
-        self.etiqueta4 = tk.Label(self, image=self.sc2)        
-        self.etiqueta4.pack()#place(x=100, y=100)
-        
-class WOS1(ttk.Frame):    
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.config(width=800, height=450)
-        self.label = ttk.Label(
-            self, font=("Tahoma", 12),
-            text='Si exporta un archivo de texto sin formato desde Web of Science\nseleccione las opciones "KeyWords" y "KeyWords Plus"', foreground="#0070C0")
-        self.label.pack()
-        
-        # Generar el contenido de cada una de las pestañas.
-        self.ws1 = tk.PhotoImage(file=recurso_relativo("images/WOS1.png"))
-        self.etiqueta = tk.Label(self, image=self.ws1)
-        self.etiqueta.pack()#place(x=1, y=1)
-        
-        self.ws2 = tk.PhotoImage(file=recurso_relativo("images/WOS2.png"))
-        self.etiqueta2 = tk.Label(self, image=self.ws2)
-        self.etiqueta2.pack()#place(x=100, y=100)
-
 
 class SCOPUS(ttk.Frame):    
     def __init__(self, *args, **kwargs):
@@ -427,7 +356,7 @@ class VentanaSecundaria(tk.Toplevel):
         self.focus()
         self.grab_set()
 
-version = "1.1"
+version = "1.2"
 fecha = "Abril 2.025"
 ventana = tk.Tk()
 ventana.title(f"Bismillah - Filtro WOS / Scopus")
