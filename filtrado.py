@@ -164,6 +164,8 @@ def parse_sco_entries(file_path):
 def buscar_en_csv(df, modo='OR', **criterios):
     """
     Busca filas que cumplan los criterios dados, combinados por AND o OR.
+    
+    Para datos de SCOPUS
 
     Parámetros:
         df (DataFrame): El DataFrame original.
@@ -213,6 +215,7 @@ def buscar_en_csv(df, modo='OR', **criterios):
 
 
 def a_excel_fuente(resultados, filtro, fecha):
+    #    SCOPUS
     archivo = f"resultados_{filtro}_{fecha}.xlsx"
     
     # Guardar con pandas
@@ -233,6 +236,71 @@ def a_excel_fuente(resultados, filtro, fecha):
     
     # Guardar el archivo modificado
     wb.save(archivo)
+
+def export_to_wos_format(records, output_file):
+    """
+    Exporta una lista de diccionarios a un archivo de texto plano con formato Web of Science.
+
+    Args:
+        records: lista de diccionarios, cada uno representando un artículo.
+        output_file: nombre del archivo de salida (.txt).
+    """
+    with open(output_file, 'w', encoding='utf-8') as f:
+        for record in records:
+            # Tipo de publicación (por defecto 'J' de Journal Article)
+            pt_value = record.get('PT', 'J')
+            f.write(f"PT {pt_value}\n")
+            
+            # Escribir campos
+            if 'AU' in record and record['AU']:
+                autores = record['AU']
+                if isinstance(autores, list):
+                    for autor in autores:
+                        f.write(f"AU {autor}\n")
+                else:
+                    f.write(f"AU {autores}\n")
+                    
+            if 'TI' in record and record['TI']:
+                f.write(f"TI {record['TI']}\n")
+                
+            if 'SO' in record and record['SO']:
+                f.write(f"SO {record['SO']}\n")
+                
+            if 'DE' in record and record['DE']:
+                keywords = record['DE']
+                if isinstance(keywords, list):
+                    for keyword in keywords:
+                        f.write(f"DE {keyword}\n")
+                else:
+                    f.write(f"DE {keywords}\n")
+                    
+            if 'AB' in record and record['AB']:
+                f.write(f"AB {record['AB']}\n")
+                
+            if 'PY' in record and record['PY']:
+                f.write(f"PY {record['PY']}\n")
+                
+            if 'VL' in record and record['VL']:
+                f.write(f"VL {record['VL']}\n")
+                
+            if 'IS' in record and record['IS']:
+                f.write(f"IS {record['IS']}\n")
+                
+            if 'BP' in record and record['BP']:
+                f.write(f"BP {record['BP']}\n")
+                
+            if 'EP' in record and record['EP']:
+                f.write(f"EP {record['EP']}\n")
+                
+            if 'DI' in record and record['DI']:
+                f.write(f"DI {record['DI']}\n")
+            
+            # Terminar registro
+            f.write('ER\n\n')
+        
+        # Terminar archivo
+        f.write('EF\n')
+
     
 
 def procesar_wos(file_path, filtro, modo = 'OR'): 
@@ -248,7 +316,8 @@ def procesar_wos(file_path, filtro, modo = 'OR'):
         datos['AB'] = filtro.get('C')
     
     filtro = next(iter(filtro.values()))
-    resultados = buscar_entradas(listado, modo='OR', **datos)        
+    resultados = buscar_entradas(listado, modo='OR', **datos)   
+    export_to_wos_format(resultados, f"resultados_{filtro}_{fecha}.txt")     
     resultados = exportar_a_excel(resultados, filtro, f"resultados_{filtro}_{fecha}.xlsx")
     if isinstance(resultados, str):
         return(resultados)
@@ -320,6 +389,15 @@ def procesar_sco(file_path, filtro, modo='OR'):
         if isinstance(resultados, str):
             return(resultados)
     """
+    
+    for col in header:
+        if col not in resultados.columns:
+            resultados[col] = ""
+    
+    # Reordenar
+    df_result = resultados[header]
+    df_result.to_csv(f"resultados_{filtro}_{fecha}.csv", index=False, encoding='utf-8-sig')
+    
     filtro = next(iter(filtro.values()))
     a_excel_fuente(resultados, filtro, fecha)
     return (f"resultados_{filtro}_{fecha}.xlsx")
@@ -328,7 +406,7 @@ def procesar_sco(file_path, filtro, modo='OR'):
 
 def debug():
     
-    wos = 0
+    wos = 1
     debug = 1
     
     if wos:       
@@ -339,7 +417,7 @@ def debug():
         T4 = 'scopus_IA_Math_Edu_120425.csv'
         
         if debug:
-            file_path = T2
+            file_path = T0
             listado = parse_wos_entries(file_path)
         else:
             file_path = input("Esciba el nombre del archivo a analizar.\n") + ".txt"
