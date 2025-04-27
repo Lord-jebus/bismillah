@@ -1,7 +1,11 @@
 # -*- coding: utf-8 -*-
 """
 Created on Sat Apr 12 23:22:16 2025
+<<<<<<< HEAD
 V 2 27-4-2025
+=======
+V 1.2 22-4-2025
+>>>>>>> 830a5eaeaa5731113ad4acad8f24c680836bbec8
 
 @author: Jebus
 """
@@ -27,8 +31,12 @@ def get_base_path():
         return os.path.dirname(os.path.abspath(__file__))
 
 def recurso_relativo(ruta_relativa):
+<<<<<<< HEAD
     """Retorna la ruta válida para usar recursos,
         ya sea en desarrollo o en el ejecutable."""
+=======
+    """Retorna la ruta válida para usar recursos, ya sea en desarrollo o en el ejecutable."""
+>>>>>>> 830a5eaeaa5731113ad4acad8f24c680836bbec8
     if hasattr(sys, '_MEIPASS'):
         # Si está empaquetado con PyInstaller
         base_path = sys._MEIPASS
@@ -203,7 +211,11 @@ class Aplicacion(ttk.Frame):
                 text="Archivo inválido", foreground="#660033")
 
         # Actualiza la etiqueta de ruta después del procesamiento
+<<<<<<< HEAD
         self.etiqueta_ruta.config(text = get_base_path(), foreground="#660033")
+=======
+        self.etiqueta_ruta.config(text=get_base_path(), foreground="#660033")
+>>>>>>> 830a5eaeaa5731113ad4acad8f24c680836bbec8
 
 class SCOPUS(ttk.Frame):    
     def __init__(self, *args, **kwargs):
@@ -357,7 +369,11 @@ class VentanaSecundaria(tk.Toplevel):
         self.focus()
         self.grab_set()
 
+<<<<<<< HEAD
 version = "2.0"
+=======
+version = "1.2"
+>>>>>>> 830a5eaeaa5731113ad4acad8f24c680836bbec8
 fecha = "Abril 2.025"
 ventana = tk.Tk()
 ventana.title(f"Bismillah - Filtro WOS / Scopus")
