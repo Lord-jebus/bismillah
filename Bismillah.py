@@ -5,11 +5,12 @@ V 2 27-4-2025
 
 @author: Jebus
 """
+import time
 import sys
 import os
 import tkinter as tk
 from tkinter import Tk,Checkbutton,IntVar
-from tkinter import ttk
+from tkinter import ttk, messagebox
 from tkinter import filedialog
 import filtrado
 
@@ -17,6 +18,9 @@ filename = ""
 tipo = True
 file_source = ""
 filtro = ""
+titulo = "Bismillah - Filtro WOS / Scopus"
+version = "2.1"
+fecha = "Abril 2.025"
 
 def get_base_path():
     if getattr(sys, 'frozen', False):
@@ -179,35 +183,49 @@ class Aplicacion(ttk.Frame):
             self.etiqueta_advertencia.config(
                 text="Seleccione un criterio de filtro", foreground="#660033")
             return
-       
-        datos = {}
-        if self.val.get() == 1:
-            datos['A'] = self.entry_var.get()
-        if self.val2.get() == 1:
-            datos['B'] = self.entry_var.get()
-        if self.val3.get() == 1:
-            datos['C'] = self.entry_var.get()
-        
-        # Selección de función de procesamiento
-        procesar_func = {
-            "WOS": filtrado.procesar_wos,
-            "SCO": filtrado.procesar_sco
-        }.get(file_source)
+        try:
+            datos = {}
+            if self.val.get() == 1:
+                datos['A'] = self.entry_var.get()
+            if self.val2.get() == 1:
+                datos['B'] = self.entry_var.get()
+            if self.val3.get() == 1:
+                datos['C'] = self.entry_var.get()
+            
+            # Selección de función de procesamiento
+            procesar_func = {
+                "WOS": filtrado.procesar_wos,
+                "SCO": filtrado.procesar_sco
+            }.get(file_source)
 
-        if procesar_func:
-            fecha = procesar_func(filename, datos, modo = 'OR')
-            print(fecha)
-            self.etiqueta_ruta.config(
-                text=recurso_relativo("images")[:-7], foreground="#660033")
-            self.etiqueta_archivo.config(text=fecha, foreground="#660033")
-        else:
-            self.etiqueta_advertencia.config(
-                text="Archivo inválido", foreground="#660033")
-
-        # Actualiza la etiqueta de ruta después del procesamiento
-
-        self.etiqueta_ruta.config(text = get_base_path(), foreground="#660033")
-        self.etiqueta_ruta.config(text=get_base_path(), foreground="#660033")
+            if procesar_func:
+                fecha = procesar_func(filename, datos, modo = 'OR')                
+                self.etiqueta_ruta.config(
+                    text=recurso_relativo("images")[:-7], foreground="#660033")
+                self.etiqueta_archivo.config(text=fecha, foreground="#660033")
+            else:
+                self.etiqueta_advertencia.config(
+                    text="Archivo inválido", foreground="#660033")
+                messagebox.showinfo(
+                    message = 'Archivo inválido',
+                    title = titulo
+                    )
+            # Actualiza la etiqueta de ruta después del procesamiento
+            self.etiqueta_ruta.config(text = 'Ruta de destino:\n' + get_base_path(), foreground = "#660033")
+            #self.etiqueta_ruta.config(text = get_base_path(), foreground = "#660033")
+            messagebox.showinfo(
+                message = 'Proceso terminado',
+                title = titulo
+                )
+        except:
+            with open(error, "a") as f:
+                f.write(time.strftime("%d/%m/%y\n"))
+                f.write(time.strftime("%H:%M:%S\n"))
+                traceback.print_exc(file=f)
+            messagebox.showerror(
+                msg='Error, Favor revisar el archivo error.log para más detalles',
+                title = titulo
+                )
 
 class SCOPUS(ttk.Frame):    
     def __init__(self, *args, **kwargs):
@@ -361,18 +379,27 @@ class VentanaSecundaria(tk.Toplevel):
         self.focus()
         self.grab_set()
 
+def main():    
+    ventana = tk.Tk()
+    ventana.title(titulo)
+    ventana.config(width=500, height=460)
+    ventana.resizable(False, False)
+    try:
+        icono = tk.PhotoImage(file=recurso_relativo("images/ventana2.png"))
+        ventana.iconphoto(False, icono)
+        # Puedes probar: 'default', 'alt', 'classic', 'vista', 'xpnative', 'clam'
+        style = ttk.Style(ventana)
+        style.theme_use("vista")
 
-version = "2.0"
-fecha = "Abril 2.025"
-ventana = tk.Tk()
-ventana.title(f"Bismillah - Filtro WOS / Scopus")
-ventana.config(width=500, height=460)
-ventana.resizable(False, False)
-icono = tk.PhotoImage(file=recurso_relativo("images/ventana2.png"))
-ventana.iconphoto(False, icono)
-# Puedes probar: 'default', 'alt', 'classic', 'vista', 'xpnative', 'clam'
-style = ttk.Style(ventana)
-style.theme_use("vista")
+        app = Aplicacion(ventana)
+        ventana.mainloop()
+        return 0
+    #indica algún error en tiempo de ejecución
+    except:
+        with open(error, "a") as f:
+            f.write(time.strftime("%d/%m/%y\n"))
+            f.write(time.strftime("%H:%M:%S\n"))
+            traceback.print_exc(file=f)
 
-app = Aplicacion(ventana)
-ventana.mainloop()
+if __name__ == '__main__':
+    main()

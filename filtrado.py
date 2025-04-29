@@ -239,67 +239,56 @@ def a_excel_fuente(resultados, filtro, fecha):
 
 def export_to_wos_format(records, output_file):
     """
-    Exporta una lista de diccionarios a un archivo de texto plano con formato Web of Science.
+    Exporta una lista de diccionarios a un archivo de texto plano con formato Web of Science,
+    usando una sola etiqueta AU o DE y líneas con sangría para los elementos subsiguientes.
 
     Args:
         records: lista de diccionarios, cada uno representando un artículo.
         output_file: nombre del archivo de salida (.txt).
     """
+    indent = '   '  # tres espacios
+
+    # Campos que deben escribirse en una línea con indentación después de la primera etiqueta
+    multi_indent_fields = {'AU', 'DE'}
+
+    # Campos que deben ir en una sola línea
+    single_line_fields = ['TI', 'SO', 'AB', 'PY', 'VL', 'IS', 'BP', 'EP', 'DI']
+
     with open(output_file, 'w', encoding='utf-8') as f:
         for record in records:
-            # Tipo de publicación (por defecto 'J' de Journal Article)
+            # PT - Tipo de publicación
             pt_value = record.get('PT', 'J')
             f.write(f"PT {pt_value}\n")
-            
-            # Escribir campos
-            if 'AU' in record and record['AU']:
-                autores = record['AU']
-                if isinstance(autores, list):
-                    for autor in autores:
-                        f.write(f"AU {autor}\n")
-                else:
-                    f.write(f"AU {autores}\n")
+
+            # Campos con indentación (AU, DE)
+            for field in multi_indent_fields:
+                value = record.get(field)
+                if value:
+                    # Si viene como string, intentar separarlo por ';'
+                    if isinstance(value, str):
+                        items = [item.strip() for item in value.split(';')]
+                    elif isinstance(value, list):
+                        items = value
+                    else:
+                        items = [str(value)]
                     
-            if 'TI' in record and record['TI']:
-                f.write(f"TI {record['TI']}\n")
-                
-            if 'SO' in record and record['SO']:
-                f.write(f"SO {record['SO']}\n")
-                
-            if 'DE' in record and record['DE']:
-                keywords = record['DE']
-                if isinstance(keywords, list):
-                    for keyword in keywords:
-                        f.write(f"DE {keyword}\n")
-                else:
-                    f.write(f"DE {keywords}\n")
-                    
-            if 'AB' in record and record['AB']:
-                f.write(f"AB {record['AB']}\n")
-                
-            if 'PY' in record and record['PY']:
-                f.write(f"PY {record['PY']}\n")
-                
-            if 'VL' in record and record['VL']:
-                f.write(f"VL {record['VL']}\n")
-                
-            if 'IS' in record and record['IS']:
-                f.write(f"IS {record['IS']}\n")
-                
-            if 'BP' in record and record['BP']:
-                f.write(f"BP {record['BP']}\n")
-                
-            if 'EP' in record and record['EP']:
-                f.write(f"EP {record['EP']}\n")
-                
-            if 'DI' in record and record['DI']:
-                f.write(f"DI {record['DI']}\n")
-            
-            # Terminar registro
-            f.write('ER\n\n')
+                    if items:
+                        f.write(f"{field} {items[0]}\n")
+                        for item in items[1:]:
+                            f.write(f"{indent}{item}\n")
+
+            # Campos de una sola línea
+            for field in single_line_fields:
+                value = record.get(field)
+                if value:
+                    f.write(f"{field} {value}\n")
+
+            # Fin del registro
+            f.write("ER\n\n")
         
-        # Terminar archivo
-        f.write('EF\n')
+        # Fin del archivo
+        f.write("EF\n")
+
 
     
 
@@ -361,7 +350,6 @@ def procesar_sco(file_path, filtro, modo='OR'):
     if 'C' in filtro:
         datos['Abstract'] = filtro.get('C')
 
-    
     resultados = buscar_en_csv(file_tmp, modo='OR', **datos)
     if isinstance(resultados, str):
         return(resultados)
@@ -396,9 +384,8 @@ def procesar_sco(file_path, filtro, modo='OR'):
     
     # Reordenar
     df_result = resultados[header]
-    df_result.to_csv(f"resultados_{filtro}_{fecha}.csv", index=False, encoding='utf-8-sig')
-    
     filtro = next(iter(filtro.values()))
+    df_result.to_csv(f"resultados_{filtro}_{fecha}.csv", index=False, encoding='utf-8-sig')        
     a_excel_fuente(resultados, filtro, fecha)
     return (f"resultados_{filtro}_{fecha}.xlsx")
     
